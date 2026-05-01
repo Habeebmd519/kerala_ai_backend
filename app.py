@@ -53,14 +53,18 @@ CORS(app)
 # ============================================================
 # FIREBASE INIT
 # ============================================================
+firebase_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT)
+    if firebase_json:
+        cred_dict = json.loads(firebase_json)
+        cred = credentials.Certificate(cred_dict)
+    else:
+        cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT)
+
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-
-
 # ============================================================
 # GROQ INIT
 # ============================================================
