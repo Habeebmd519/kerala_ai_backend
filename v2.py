@@ -3180,7 +3180,7 @@ def home():
     })
 
 
-@v2_bp.route("/api/health", methods=["GET"])
+@v2_bp.route("/health", methods=["GET"])
 def health_api():
     cache_age = round(time.time() - PLACES_CACHE_TIME, 2) if PLACES_CACHE_TIME else None
 
@@ -3204,9 +3204,12 @@ def health_api():
         "osmSampleAvailable": osm_sample_available,
     })
 
-@v2_bp.route("/api/chat", methods=["POST"])
+@v2_bp.route("/chat", methods=["POST", "OPTIONS"])
 def chat():
     try:
+        if request.method == "OPTIONS":
+            return jsonify({"ok": True}), 200
+
         body = request.get_json(force=True) or {}
 
         message = safe_text(body.get("message"))
@@ -3217,22 +3220,15 @@ def chat():
         user_lat = safe_float(body.get("userLat"), 0.0)
         user_lng = safe_float(body.get("userLng"), 0.0)
         user_location_text = safe_text(body.get("userLocationText"))
-        data = request.get_json() or {}
-        message = data.get("message", "")
 
-        if is_train_question(message):
-            train_result = handle_train_question(message)
-            return jsonify(train_result)
-        
         if not isinstance(last_matched_place_ids, list):
             last_matched_place_ids = []
 
         if not message:
-            return jsonify({"reply": "Please ask me something about Kerala travel.", "error": "empty_message"}), 400
-
-        
-       # if not message:
-         #   return jsonify({"reply": "Please ask me something about Kerala travel.", "error": "empty_message"}), 400
+            return jsonify({
+                "reply": "Please ask me something about Kerala travel.",
+                "error": "empty_message"
+            }), 400
 
         if is_train_question(message):
             train_result = handle_train_question(message)
@@ -3247,17 +3243,23 @@ def chat():
             user_lng=user_lng,
             user_location_text=user_location_text,
         )
+
         return jsonify(result)
 
     except Exception as e:
-        debug_log("Server error in /api/chat", {"error": str(e), "trace": traceback.format_exc()})
+        debug_log("Server error in /api/v2/chat", {
+            "error": str(e),
+            "trace": traceback.format_exc()
+        })
+
         return jsonify({
             "reply": "Sorry, I had a small server issue. Please try again 🙏",
             "error": str(e),
         }), 500
 
 
-@v2_bp.route("/api/places", methods=["GET"])
+
+@v2_bp.route("/places", methods=["GET"])
 def places_api():
     try:
         limit = safe_int(request.args.get("limit"), 100)
@@ -3272,7 +3274,7 @@ def places_api():
         return jsonify({"error": str(e)}), 500
 
 
-@v2_bp.route("/api/search", methods=["GET"])
+@v2_bp.route("/search", methods=["GET"])
 def search_api():
     try:
         q = safe_text(request.args.get("q"))
@@ -3311,7 +3313,7 @@ def search_api():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@v2_bp.route("/api/images", methods=["GET"])
+@v2_bp.route("/images", methods=["GET"])
 def images_api():
     try:
         q = safe_text(request.args.get("q"))
@@ -3343,7 +3345,7 @@ def images_api():
         return jsonify({"error": str(e)}), 500
 
 
-@v2_bp.route("/api/image", methods=["GET"])
+@v2_bp.route("/image", methods=["GET"])
 def single_image_api():
     try:
         q = safe_text(request.args.get("q"))
@@ -3365,7 +3367,7 @@ def single_image_api():
         return jsonify({"error": str(e)}), 500
 
 
-@v2_bp.route("/api/trending", methods=["GET"])
+@v2_bp.route("/trending", methods=["GET"])
 def trending_api():
     try:
         limit = safe_int(request.args.get("limit"), 20)
@@ -3382,7 +3384,7 @@ def trending_api():
         return jsonify({"error": str(e)}), 500
 
 
-@v2_bp.route("/api/place/<place_id>", methods=["GET"])
+@v2_bp.route("/place/<place_id>", methods=["GET"])
 def place_detail_api(place_id: str):
     try:
         place = get_place_by_id(place_id)
@@ -3392,7 +3394,7 @@ def place_detail_api(place_id: str):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@v2_bp.route("/api/osm/search", methods=["GET"])
+@v2_bp.route("/osm/search", methods=["GET"])
 def osm_search_api():
     try:
         q = safe_text(request.args.get("q"))
@@ -3439,7 +3441,7 @@ def osm_search_api():
         return jsonify({"error": str(e)}), 500
 
 
-@v2_bp.route("/api/osm/categories", methods=["GET"])
+@v2_bp.route("/osm/categories", methods=["GET"])
 def osm_categories_api():
     return jsonify({
         "collection": OSM_COLLECTION,
@@ -3452,7 +3454,7 @@ def osm_categories_api():
             "/api/osm/search?q=railway station kochi",
         ],
     })
-@v2_bp.route("/api/cache/refresh", methods=["POST", "GET"])
+@v2_bp.route("/cache/refresh", methods=["POST", "GET"])
 def refresh_cache_api():
     try:
         places = load_places_from_firestore(force=True)
@@ -3466,7 +3468,7 @@ def refresh_cache_api():
         return jsonify({"error": str(e)}), 500
 
 
-@v2_bp.route("/api/debug/intent", methods=["POST"])
+@v2_bp.route("/debug/intent", methods=["POST"])
 def debug_intent_api():
     body = request.get_json(force=True) or {}
     message = safe_text(body.get("message"))
