@@ -1727,6 +1727,14 @@ def debug_intent_api():
     })
 
 
+#####################################################
+#. import version 2
+#======================================
+from v2 import v2_bp
+
+app.register_blueprint(v2_bp)
+
+
 # ============================================================
 # RUN
 # ============================================================
@@ -1742,4 +1750,4 @@ if __name__ == "__main__":
     print(f"Port: {PORT}")
     print("=" * 60)
 
-    app.run(host="0.0.0.0", port=PORT, debug=True)
+    app.run(host="0.0.0.0", port=PORT, debug=false)
