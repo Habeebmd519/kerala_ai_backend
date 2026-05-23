@@ -5,3 +5,4 @@ groq
 python-dotenv
 requests
 gunicorn
+tavily-python

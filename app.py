@@ -17,6 +17,10 @@ from firebase_admin import credentials, firestore
 from google.api_core.exceptions import ResourceExhausted, GoogleAPIError
 from groq import Groq
 
+from v3.live_search import tavily_live_search
+from v3.intent_detector import should_use_live_search, build_live_search_query
+from v3.response_builder import build_v3_response
+
 
 # ============================================================
 # CONFIG
@@ -1730,9 +1734,9 @@ def debug_intent_api():
 #####################################################
 #. import version 2
 #======================================
-from v2 import v2_bp
+# from v2 import v2_bp
 
-app.register_blueprint(v2_bp)
+# app.register_blueprint(v2_bp)
 
 
 # ============================================================
@@ -1750,4 +1754,5 @@ if __name__ == "__main__":
     print(f"Port: {PORT}")
     print("=" * 60)
 
-    app.run(host="0.0.0.0", port=PORT, debug=false)
+    debug_mode = os.getenv("ENV", "development") == "development"
+    app.run(host="0.0.0.0", port=PORT, debug=debug_mode)
